@@ -101,8 +101,9 @@ class ConcurrencyTest(unittest.TestCase):
                 "并发过程出现非预期异常:\n"
                 + "\n".join(f"{type(e).__name__}: {e}" for e in self.errors)
             )
-        # 参考轮换后确实发生过交错拒绝，且拒绝没有破坏任何不变量
-        self.assertGreater(self.expected_rejections, 0)
+        # 样本上传只会因「内容与当时生效参考不符」被拒绝；换参考期间上传
+        # 不再因等待整批重验而失败。拒绝次数取决于线程交错，这里只要求
+        # 拒绝没有破坏任何不变量（上面的读取断言），不做次数断言。
 
         # 最终状态：参考为 V3，所有样本已被重验并指向 V3（VALID 或 NEEDS_REUPLOAD）
         with self.app.app_context():

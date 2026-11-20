@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% if pending_reference %}
+<section class="card card-pending">
+  <h2>参考重验中</h2>
+  <p class="hint">
+    新参考 #{{ pending_reference.id }}（{{ pending_reference.length }} bp）
+    正在按当前样本重新校验，共 {{ pending_reference.total_samples }} 个样本，
+    已完成 {{ pending_reference.staged_count }} 个。
+    <strong>本页仍显示当前参考下的完整结果</strong>；重验期间可继续按当前参考上传、重传或删除样本。
+    新参考生效前不接受再次更换参考。
+  </p>
+</section>
+{% endif %}
+
 <section class="card">
   <h2>参考序列</h2>
   {% if reference %}
@@ -12,7 +25,7 @@
     <p class="seq" title="参考序列预览">
       {{ reference.sequence[:120] }}{% if reference.length > 120 %}…（仅显示前 120 bp）{% endif %}
     </p>
-    <p class="hint">更换参考会立即按新序列重新校验全部样本：REF 不符或归一化后重复的样本将标记为「待重传」并从汇总剔除。</p>
+    <p class="hint">更换参考后会按新序列重新校验全部样本（重验期间继续显示当前结果）：REF 不符或归一化后重复的样本将标记为「待重传」并从汇总剔除；已删除的样本不会出现在重验结果中。同一时间只能进行一项换参考操作。</p>
   {% else %}
     <p class="empty">尚未上传参考序列，请先上传一条仅含 ACGT 的参考序列（支持纯文本或单记录 FASTA）。</p>
   {% endif %}

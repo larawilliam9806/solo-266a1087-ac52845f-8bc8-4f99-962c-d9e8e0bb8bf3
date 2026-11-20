@@ -4,5 +4,6 @@ __pycache__/
 *.db
 *.db-wal
 *.db-shm
+*.db.revalidate.lock
 data/
 .DS_Store

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 
 from flask import (
     Flask,
     abort,
+    current_app,
     flash,
     redirect,
     render_template,
@@ -42,8 +44,23 @@ def create_app() -> Flask:
             return redirect(url_for("index"))
         try:
             result = services.upload_reference(file.read())
+        except services.RevalidationInProgress as exc:
+            flash(str(exc), "warning")
+            return redirect(url_for("index"))
         except ValidationError as exc:
             flash(f"参考上传失败，当前结果未改变：{exc}", "error")
+            return redirect(url_for("index"))
+        except sqlite3.Error as exc:
+            # 换版失败（例如并发写锁超时）：新参考不会生效，原参考与期间
+            # 已成功提交的样本改动保持不变。
+            flash(
+                f"参考切换失败，原参考与已有结果保持不变，请稍后重试：{exc}",
+                "error",
+            )
+            return redirect(url_for("index"))
+        except Exception:
+            current_app.logger.exception("参考切换失败")
+            flash("参考切换失败，原参考与已有结果保持不变，请稍后重试。", "error")
             return redirect(url_for("index"))
         flash(
             f"参考已更新（长度 {result['length']}）。重新校验 "
@@ -67,6 +84,9 @@ def create_app() -> Flask:
         except ValidationError as exc:
             flash(f"样本上传失败，当前结果未改变：{exc}", "error")
             return redirect(url_for("index"))
+        except sqlite3.Error as exc:
+            flash(f"样本上传失败，当前结果未改变，请重试：{exc}", "error")
+            return redirect(url_for("index"))
         action = "替换旧版本" if result["replaced"] else "新建"
         flash(
             f"样本「{result['sample']}」{action}成功，"
@@ -77,7 +97,11 @@ def create_app() -> Flask:
 
     @app.post("/samples/<int:sample_id>/delete")
     def delete_sample(sample_id: int):
-        services.delete_sample(sample_id)
+        try:
+            services.delete_sample(sample_id)
+        except sqlite3.Error as exc:
+            flash(f"样本删除失败，请重试：{exc}", "error")
+            return redirect(url_for("index"))
         flash("样本已删除，相关变异计数已更新。", "success")
         return redirect(url_for("index"))
 

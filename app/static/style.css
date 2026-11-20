@@ -81,6 +81,8 @@ th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--lin
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
 tbody tr:hover { background: #f8fafc; }
 .row-warn { background: #fffbeb; }
+.card-pending { border-color: #fcd34d; background: #fffbeb; }
+.card-pending h2 { color: var(--warn); }
 
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
